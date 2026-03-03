@@ -210,11 +210,11 @@ function initFirebase() {
     db = getDatabase(app);
     dbRef = ref(db, 'plots');
 
-    // Listen for real-time changes
+    // Listen for real-time changes — fires immediately on load with saved data
     onValue(dbRef, snap => {
       const data = snap.val() || {};
-      // Merge remote into local status
-      Object.keys(data).forEach(id => { status[id] = data[id]; });
+      // Load ALL saved statuses from Firebase
+      Object.keys(data).forEach(id => { status[parseInt(id)] = data[id]; });
       renderMap();
       updateStats();
       setDbStatus(true, 'Connected — changes sync in real-time');
@@ -365,8 +365,7 @@ function mkel(tag) { return document.createElementNS('http://www.w3.org/2000/svg
 
 window.addEventListener('load', () => {
   setTimeout(window.fit, 100);
-  initFirebase();
-  // Plots baked in — no loading needed
+  // Plots baked in — load BEFORE Firebase so onValue finds them ready
   const data = {
   "plots": [
     {
@@ -756,8 +755,7 @@ window.addEventListener('load', () => {
   plots.forEach(p => { if (!status[p.id]) status[p.id] = 'unsold'; });
   document.getElementById('no-plots').style.display = 'none';
   document.querySelector('.btn.load').style.display = 'none';
-  renderMap();
-  updateStats();
+  initFirebase(); // init AFTER plots loaded so onValue can renderMap correctly
 });
 </script>
 </body>
